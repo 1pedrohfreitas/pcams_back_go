@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/1pedrohfreitas/pcams_back_go/database"
@@ -11,9 +10,12 @@ import (
 )
 
 func ShowUser(c *gin.Context) {
+	db := database.GetDataBase()
+	var user models.User
 	id := c.Param("id")
 
 	newid, err := strconv.Atoi(id)
+	user.ID = uint(newid)
 
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -23,29 +25,16 @@ func ShowUser(c *gin.Context) {
 		return
 	}
 
-	db := database.GetDataBase()
+	err2 := db.QueryRow(`Select fullname, alias, username, usertype, status, "password", created_at, updated_at from users where id=$1`, newid).Scan(&user.FullName,
+		&user.Alias,
+		&user.UserName,
+		&user.UserType,
+		&user.Status,
+		&user.Password,
+		&user.Created_at,
+		&user.Updated_at)
 
-	var user models.User
-	rows, err := db.Query(`Select * from users where id=?`, newid)
-	database.CheckError(err)
-
-	defer rows.Close()
-
-	for rows.Next() {
-		var fullname string
-
-		err = rows.Scan(&fullname)
-		database.CheckError(err)
-
-		fmt.Println(fullname)
-	}
-
-	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "Não foi encontrado esse usuario",
-		})
-		return
-	}
+	database.CheckError(err2)
 
 	c.JSON(200, user)
 }
@@ -102,11 +91,7 @@ func ShowUsers(c *gin.Context) {
 			&user.Updated_at,
 		)
 		database.CheckError(err)
-		// user := models.User{
-		// 	FullName: fullname,
-		// }
 		users = append(users, user)
-		// fmt.Println(fullname)
 	}
 
 	result.Data = append(result.Data, users)
@@ -114,38 +99,43 @@ func ShowUsers(c *gin.Context) {
 
 }
 func UpdateUser(c *gin.Context) {
-	// db := database.GetDataBase()
-
+	db := database.GetDataBase()
 	var user models.User
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": "Erro no Json",
+		})
+		return
+	}
 
-	// err := c.ShouldBindJSON(&user)
-	// if err != nil {
-	// 	c.JSON(400, gin.H{
-	// 		"error": "Erro no Json",
-	// 	})
-	// 	return
-	// }
+	_, err2 := db.Exec(`UPDATE pcam.users SET fullname=$1, alias=$2, username=$3, usertype=$4, status=$5, "password"=$6 WHERE id=$7`,
+		user.FullName,
+		user.Alias,
+		user.UserName,
+		user.UserType,
+		user.Status,
+		user.Password, user.ID)
 
-	// err = db.Save(&user).Error
+	database.CheckError(err2)
 
 	c.JSON(200, user)
 }
 
 func DeleteUser(c *gin.Context) {
-	// id := c.Param("id")
+	id := c.Param("id")
 
-	// newid, err := strconv.Atoi(id)
+	newid, err := strconv.Atoi(id)
 
-	// if err != nil {
-	// 	c.JSON(400, gin.H{
-	// 		"error": "Formato de Id inválido",
-	// 	})
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": "Formato de Id inválido",
+		})
 
-	// 	return
-	// }
-
-	// db := database.GetDataBase()
-
-	// err = db.Delete(&models.User{}, newid).Error
+		return
+	}
+	db := database.GetDataBase()
+	_, err2 := db.Exec("DELETE FROM products WHERE id=$1", newid)
+	database.CheckError(err2)
 	c.Status(204)
 }
