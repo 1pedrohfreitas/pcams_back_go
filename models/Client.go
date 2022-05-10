@@ -8,6 +8,6 @@ type Clients struct {
 	Alias      string    `json:"alias"`
 	Status     int       `json:"status"`
 	Created_at time.Time `json:"password"`
-	Cpdated_at time.Time `json:"updated_at"`
+	Updated_at time.Time `json:"updated_at"`
 	CodClient  string    `json:"codclient"`
 }
