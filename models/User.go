@@ -9,9 +9,9 @@ type User struct {
 	FullName   string    `json:"fullname"`
 	Alias      string    `json:"alias"`
 	UserName   string    `json:"username"`
-	UserType   string    `json:"usertype"`
+	UserType   int       `json:"usertype"`
 	Status     int       `json:"status"`
-	Password   string    `json:"password"`
+	Password   string    `json:"password,omitempty"`
 	Created_at time.Time `json:"created_at"`
 	Updated_at time.Time `json:"updated_at"`
 }

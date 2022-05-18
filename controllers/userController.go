@@ -6,6 +6,7 @@ import (
 	"github.com/1pedrohfreitas/pcams_back_go/database"
 	"github.com/1pedrohfreitas/pcams_back_go/dto"
 	"github.com/1pedrohfreitas/pcams_back_go/models"
+	"github.com/1pedrohfreitas/pcams_back_go/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,13 +25,11 @@ func ShowUser(c *gin.Context) {
 
 		return
 	}
-
-	err2 := db.QueryRow(`Select fullname, alias, username, usertype, status, "password", created_at, updated_at from users where id=$1`, newid).Scan(&user.FullName,
+	err2 := db.QueryRow(`Select fullname, alias, username, usertype, status, created_at, updated_at from users where id=$1`, newid).Scan(&user.FullName,
 		&user.Alias,
 		&user.UserName,
 		&user.UserType,
 		&user.Status,
-		&user.Password,
 		&user.Created_at,
 		&user.Updated_at)
 
@@ -49,7 +48,7 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
-
+	user.Password = services.SHA256Encoder(user.Password)
 	err = db.QueryRow(
 		`INSERT INTO users (fullname, alias, username, usertype, status, "password") VALUES($1, $2, $3, $4, $5, $6)
 		RETURNING id`, user.FullName,
@@ -69,9 +68,8 @@ func ShowUsers(c *gin.Context) {
 	db := database.GetDataBase()
 
 	var result dto.PageResultDTO
-	var users []models.User
 
-	rows, err := db.Query(`Select * from "users"`)
+	rows, err := db.Query(`SELECT id, fullname, alias, username, usertype, status, created_at, updated_at FROM users`)
 	database.CheckError(err)
 
 	defer rows.Close()
@@ -86,15 +84,13 @@ func ShowUsers(c *gin.Context) {
 			&user.UserName,
 			&user.UserType,
 			&user.Status,
-			&user.Password,
 			&user.Created_at,
 			&user.Updated_at,
 		)
 		database.CheckError(err)
-		users = append(users, user)
+		result.Data = append(result.Data, user)
 	}
 
-	result.Data = append(result.Data, users)
 	c.JSON(200, result)
 
 }
@@ -108,7 +104,7 @@ func UpdateUser(c *gin.Context) {
 		})
 		return
 	}
-
+	user.Password = services.SHA256Encoder(user.Password)
 	_, err2 := db.Exec(`UPDATE pcam.users SET fullname=$1, alias=$2, username=$3, usertype=$4, status=$5, "password"=$6 WHERE id=$7`,
 		user.FullName,
 		user.Alias,
@@ -135,7 +131,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 	db := database.GetDataBase()
-	_, err2 := db.Exec("DELETE FROM products WHERE id=$1", newid)
+	_, err2 := db.Exec("DELETE FROM users WHERE id=$1", newid)
 	database.CheckError(err2)
 	c.Status(204)
 }

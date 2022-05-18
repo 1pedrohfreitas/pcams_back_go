@@ -6,9 +6,10 @@ type Cams struct {
 	ID           uint      `json:"id"`
 	DeviceName   string    `json:"devicename"`
 	Alias        string    `json:"alias"`
-	StreamType   string    `json:"streamtype"`
+	StreamType   string    `json:"-"`
 	UrlCamStream string    `json:"urlcamstream"`
 	Status       int       `json:"status"`
-	Created_at   time.Time `json:"password"`
-	Updated_at   time.Time `json:"updated_at"`
+	Icon         T_Images  `json:"icon"`
+	Created_at   time.Time `json:"-"`
+	Updated_at   time.Time `json:"-"`
 }
